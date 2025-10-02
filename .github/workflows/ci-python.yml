@@ -1,0 +1,154 @@
+name: Python Build
+
+on:
+  push:
+    branches: [ main, develop, feature/* ]
+  pull_request:
+    branches: [ main, develop ]
+
+env:
+  COVERAGE_THRESHOLD: 75
+
+jobs:
+  build:
+    name: Build and Test
+    runs-on: ${{ matrix.os }}
+    
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ['3.10', '3.11', '3.12']
+      fail-fast: false
+    
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+        cache: 'pip'
+    
+    - name: Display Environment
+      run: |
+        python --version
+        pip --version
+    
+    - name: Install uv
+      run: |
+        pip install uv
+    
+    - name: Sync Dependencies
+      run: uv sync
+    
+    - name: Run Build Pipeline
+      run: python scripts/build/build.py --verbose --fix
+    
+    - name: Upload Coverage to Codecov
+      uses: codecov/codecov-action@v4
+      if: always()
+      with:
+        files: ./coverage.xml
+        flags: unittests
+        name: codecov-py${{ matrix.python-version }}-${{ matrix.os }}
+        fail_ci_if_error: true
+        token: ${{ secrets.CODECOV_TOKEN }}
+    
+    - name: Upload Coverage HTML Report
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: coverage-report-py${{ matrix.python-version }}-${{ matrix.os }}
+        path: htmlcov/
+        retention-days: 30
+    
+    - name: Upload Test Results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results-py${{ matrix.python-version }}-${{ matrix.os }}
+        path: reports/
+        retention-days: 30
+    
+    - name: Comment PR with Coverage
+      if: github.event_name == 'pull_request' && matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
+      uses: orgoro/coverage@v3.1
+      with:
+        coverageFile: coverage.xml
+        token: ${{ secrets.GITHUB_TOKEN }}
+        thresholdAll: 0.75
+
+  lint:
+    name: Lint and Type Check
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+    
+    - name: Install uv
+      run: pip install uv
+    
+    - name: Sync Dependencies
+      run: uv sync
+    
+    - name: Run Ruff Format Check
+      run: uv run ruff format --check .
+    
+    - name: Run Ruff Lint
+      run: uv run ruff check . --output-format=json --output-file=ruff-report.json
+      continue-on-error: true
+    
+    - name: Run mypy
+      run: uv run mypy . --junit-xml=mypy-report.xml
+      continue-on-error: true
+    
+    - name: Upload Lint Reports
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: lint-reports
+        path: |
+          ruff-report.json
+          mypy-report.xml
+        retention-days: 30
+
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    
+    - name: Install uv
+      run: pip install uv
+    
+    - name: Sync Dependencies
+      run: uv sync
+    
+    - name: Run Bandit (via Ruff)
+      run: uv run ruff check . --select S --output-format=json --output-file=security-report.json
+      continue-on-error: true
+    
+    - name: Upload Security Report
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: security-report
+        path: security-report.json
+        retention-days: 30

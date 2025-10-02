@@ -1,0 +1,94 @@
+name: .NET Build
+
+on:
+  push:
+    branches: [ main, develop, feature/* ]
+  pull_request:
+    branches: [ main, develop ]
+
+env:
+  DOTNET_VERSION: '8.0.x'
+  MIN_COVERAGE: 75
+
+jobs:
+  build:
+    name: Build and Test
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Full history for better analysis
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+    
+    - name: Display Environment
+      run: |
+        dotnet --version
+        dotnet --list-sdks
+    
+    - name: Restore Dependencies
+      run: dotnet restore
+    
+    - name: Run Build Pipeline
+      run: .\scripts\build\build-full.bat --verbose
+      env:
+        MIN_COVERAGE: ${{ env.MIN_COVERAGE }}
+    
+    - name: Upload Coverage to Codecov
+      uses: codecov/codecov-action@v4
+      if: always()
+      with:
+        files: ./artifacts/coverage/coverage.cobertura.xml
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: true
+        token: ${{ secrets.CODECOV_TOKEN }}
+    
+    - name: Upload Coverage HTML Report
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: coverage-report
+        path: artifacts/coverage/report/
+        retention-days: 30
+    
+    - name: Upload Test Results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results
+        path: artifacts/
+        retention-days: 30
+    
+    - name: Comment PR with Coverage
+      if: github.event_name == 'pull_request'
+      uses: orgoro/coverage@v3.1
+      with:
+        coverageFile: artifacts/coverage/coverage.cobertura.xml
+        token: ${{ secrets.GITHUB_TOKEN }}
+        thresholdAll: 0.75
+
+  build-linux:
+    name: Build on Linux
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+    
+    - name: Build Solution
+      run: dotnet build --configuration Release
+    
+    - name: Run Tests
+      run: dotnet test --configuration Release --no-build --verbosity normal

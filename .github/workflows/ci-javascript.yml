@@ -1,0 +1,136 @@
+name: JavaScript Build
+
+on:
+  push:
+    branches: [ main, develop, feature/* ]
+  pull_request:
+    branches: [ main, develop ]
+
+env:
+  NODE_VERSION: '20'
+  COVERAGE_THRESHOLD: 75
+
+jobs:
+  build:
+    name: Build and Test
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [18, 20]
+    
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Setup Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+    
+    - name: Display Environment
+      run: |
+        node --version
+        npm --version
+    
+    - name: Install Dependencies
+      run: npm ci
+    
+    - name: Run Build Pipeline
+      run: node scripts/build/build.js --run-playwright-tests --threshold ${{ env.COVERAGE_THRESHOLD }}
+      env:
+        COVERAGE_THRESHOLD: ${{ env.COVERAGE_THRESHOLD }}
+    
+    - name: Upload Coverage to Codecov
+      uses: codecov/codecov-action@v4
+      if: always()
+      with:
+        files: ./coverage/cobertura-coverage.xml
+        flags: unittests
+        name: codecov-node-${{ matrix.node-version }}
+        fail_ci_if_error: true
+        token: ${{ secrets.CODECOV_TOKEN }}
+    
+    - name: Upload Coverage HTML Report
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: coverage-report-node-${{ matrix.node-version }}
+        path: coverage/
+        retention-days: 30
+    
+    - name: Upload Test Results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results-node-${{ matrix.node-version }}
+        path: artifacts/test-results/
+        retention-days: 30
+    
+    - name: Upload Playwright Report
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: playwright-report-node-${{ matrix.node-version }}
+        path: playwright-report/
+        retention-days: 30
+    
+    - name: Comment PR with Coverage
+      if: github.event_name == 'pull_request' && matrix.node-version == 20
+      uses: orgoro/coverage@v3.1
+      with:
+        coverageFile: coverage/cobertura-coverage.xml
+        token: ${{ secrets.GITHUB_TOKEN }}
+        thresholdAll: 0.75
+
+  lint:
+    name: Lint Check
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+    
+    - name: Install Dependencies
+      run: npm ci
+    
+    - name: Run ESLint
+      run: npx eslint . --max-warnings 0 --format json --output-file eslint-report.json
+      continue-on-error: true
+    
+    - name: Upload ESLint Report
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: eslint-report
+        path: eslint-report.json
+        retention-days: 30
+
+  type-check:
+    name: TypeScript Type Check
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+    
+    - name: Install Dependencies
+      run: npm ci
+    
+    - name: Run TypeScript Compiler
+      run: npx tsc --noEmit

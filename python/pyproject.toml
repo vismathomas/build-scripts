@@ -1,0 +1,254 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "solace"
+version = "1.0.0"
+description = "Solace: unified MCP server and HTML to Markdown conversion toolkit"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "Solace Team", email = "dev@example.com"}
+]
+keywords = ["mcp", "rag", "search", "markdown", "semantic", "vector", "server", "html", "converter"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Internet :: WWW/HTTP :: HTTP Servers",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Text Processing :: Indexing",
+    "Topic :: Utilities",
+]
+requires-python = ">=3.10,<3.14"
+dependencies = [
+    "beautifulsoup4>=4.12.0",
+    "html2text>=2024.2.26",
+    "mcp>=1.0.0",
+    "pydantic>=2.0.0",
+    "pydantic-ai>=0.0.13",
+    "lxml>=4.9.0",
+    "fastapi>=0.104.0",
+    "uvicorn[standard]>=0.24.0",
+    "python-dotenv>=1.0.0",
+    "python-frontmatter>=1.0.0",
+    "GitPython>=3.1.0",
+    "rich>=13.0.0",
+    "typer>=0.9.0",
+    "pydantic-ai-slim>=0.0.15",
+    "markdown>=3.4.0",
+    "pygments>=2.15.0",
+    "jinja2>=3.1.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    # Development and testing dependencies
+    "ruff>=0.1.0",
+    "mypy>=1.7.0",
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-timeout>=2.1.0",
+    "black>=23.0.0",
+    "isort>=5.12.0",
+    "pre-commit>=3.5.0",
+]
+docker = [
+    # Ultra-minimal dependencies for Docker with TF-IDF RAG
+    "mcp>=1.0.0",
+    "pydantic>=2.0.0",
+    "pydantic-ai>=0.0.13",
+    "fastapi>=0.104.0",
+    "uvicorn[standard]>=0.24.0",
+    "python-dotenv>=1.0.0",
+    "pydantic-ai-slim>=0.0.15",
+    "markdown>=3.4.0",
+    "jinja2>=3.1.0",
+]
+
+[project.scripts]
+solace = "solace.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/your-username/solace"
+Repository = "https://github.com/your-username/solace"
+Issues = "https://github.com/your-username/solace/issues"
+Documentation = "https://github.com/your-username/solace#readme"
+
+[tool.hatch.build.targets.wheel]
+packages = ["solace"]
+
+[tool.black]
+line-length = 88
+target-version = "py313"
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.pytest_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+ensure_newline_before_comments = true
+line_length = 88
+
+[tool.ruff]
+target-version = "py313"
+line-length = 88
+exclude = [
+    ".git",
+    ".mypy_cache",
+    ".pytest_cache",
+    ".ruff_cache",
+    ".venv",
+    "__pycache__",
+    "build",
+    "dist",
+]
+
+[tool.ruff.lint]
+select = [
+    "E",  # pycodestyle errors
+    "W",  # pycodestyle warnings
+    "F",  # pyflakes
+    "I",  # isort
+    "B",  # flake8-bugbear
+    "C4", # flake8-comprehensions
+    "UP", # pyupgrade
+    "N",  # pep8-naming
+    "S",  # flake8-bandit
+    "T20", # flake8-print
+    "RUF", # ruff-specific rules
+]
+ignore = [
+    "S101", # Use of assert
+    "S311", # Random generators for testing
+    "T201", # Print statements (allowed in scripts)
+    "B008", # Function call in argument defaults
+    "S603", # subprocess call without shell check
+    "S607", # Starting process with partial executable path
+    "S301", # pickle usage (acceptable for caching)
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S101", "T201", "S311", "S603", "S607"]
+"build.py" = ["T201", "S603"]
+"demo_concept.py" = ["T201"]
+"run_integration_tests.py" = ["T201", "S603", "S607"]
+
+[tool.mypy]
+python_version = "3.13"
+warn_return_any = false
+warn_unused_configs = true
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+check_untyped_defs = false
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = false
+show_error_codes = true
+strict_optional = false
+
+# Ignore missing imports for third-party libraries
+[[tool.mypy.overrides]]
+module = [
+    "sentence_transformers.*",
+    "faiss.*",
+    "markdownify.*",
+    "beautifulsoup4.*",
+    "bs4.*",
+    "frontmatter.*",
+    "git.*",
+]
+ignore_missing_imports = true
+
+# Additional override for converter module with complex BeautifulSoup typing
+[[tool.mypy.overrides]]
+module = "solace.html2markdown.converter"
+ignore_errors = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "-v",
+    "--tb=short",
+    "--cov=.",
+    "--cov-report=term-missing",
+    "--cov-report=html",
+    "--cov-report=xml",
+    "--cov-fail-under=70",
+    "--timeout=5",
+    "--timeout-method=thread",
+]
+asyncio_mode = "auto"
+timeout = 5
+
+[tool.coverage.run]
+source = ["."]
+omit = [
+    "tests/*",
+    ".venv/*",
+    "build/*",
+    "dist/*",
+    "*.egg-info/*",
+    ".pytest_cache/*",
+    ".mypy_cache/*",
+    ".ruff_cache/*",
+    "htmlcov/*",
+    "demo_concept.py",
+    "run_integration_tests.py",
+    "simple_test.py",
+    "build.py",
+    "example_confluence_usage.py",
+    "main.py",
+    "confluence_to_markdown/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "class .*\\bProtocol\\):",
+    "@(abc\\.)?abstractmethod",
+]
+
+[dependency-groups]
+dev = [
+    "mypy>=1.18.2",
+    "pytest>=8.4.2",
+    "pytest-asyncio>=1.2.0",
+    "pytest-cov>=7.0.0",
+    "pytest-timeout>=2.4.0",
+    "ruff>=0.13.1",
+    "types-markdown>=3.9.0.20250906",
+]

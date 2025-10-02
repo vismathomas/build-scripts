@@ -1091,3 +1091,8 @@ else:
 **Version**: 1.0.0  
 **Last Updated**: October 2, 2025  
 **Maintained By**: Visma Software
+
+## Included source
+
+![build.py](build.py)
+![pyproject.toml](pyproject.toml)

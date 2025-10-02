@@ -1,4 +1,7 @@
-# Python Build Scripts Documentation
+---
+tags: [python, build, linting, formatting,testing]
+---
+ # Python Build Scripts Documentation
 
 > **Professional build automation for Python projects with comprehensive quality gates**
 
@@ -1092,7 +1095,8 @@ else:
 **Last Updated**: October 2, 2025  
 **Maintained By**: Visma Software
 
-## Included source
-
+## How to build a full build script - a complete example
 ![Source](build.py)
+
+## Dependency handling using pyproject.toml
 ![pyproject.toml](pyproject.toml)

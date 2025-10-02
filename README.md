@@ -115,7 +115,28 @@ See [C# Build Scripts Documentation](cs/README.md) for detailed configuration op
 
 ### JavaScript/TypeScript Projects
 
-#### Basic Usage
+#### Using npm Scripts (Recommended)
+
+Add these scripts to your `package.json`:
+
+```json
+{
+  "scripts": {
+    "build:full": "node build.js",
+    "build:with-e2e": "node build.js --run-playwright-tests",
+    "build:ci": "node build.js --run-playwright-tests --threshold 80"
+  }
+}
+```
+
+Then run:
+```bash
+npm run build:full              # Full build pipeline
+npm run build:with-e2e          # Include E2E tests
+npm run build:ci                # CI build with stricter coverage
+```
+
+#### Direct Command Line Usage
 
 ```bash
 cd your-project
@@ -159,11 +180,65 @@ See [JavaScript Build Scripts Documentation](js/README.md) for detailed configur
 
 ### Python Projects
 
-#### Basic Usage
+#### Using uvx Directly from GitHub (Easiest)
+
+No installation needed! Run the build script directly:
+
+```bash
+# Install uv first (one-time)
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Run build script directly from GitHub
+uvx --from git+https://github.com/vismathomas/build-scripts python python/build.py
+
+# With options
+uvx --from git+https://github.com/vismathomas/build-scripts python python/build.py --verbose
+uvx --from git+https://github.com/vismathomas/build-scripts python python/build.py --fix
+```
+
+#### Using uv with Downloaded Script
+
+```bash
+# Download the script
+curl -o build.py https://raw.githubusercontent.com/vismathomas/build-scripts/main/python/build.py
+
+# Run with uv (automatic environment management)
+uv run python build.py
+
+# With verbose output
+uv run python build.py --verbose
+
+# Auto-fix issues
+uv run python build.py --fix
+```
+
+#### Traditional Python
 
 ```bash
 cd your-project
 python scripts/build/build.py
+```
+
+#### Dependencies
+
+Add these build tools to your `pyproject.toml`:
+
+```toml
+[dependency-groups]
+dev = [
+    "uv>=0.1.0",        # Fast package manager
+    "ruff>=0.13.1",     # Linter and formatter
+    "mypy>=1.18.2",     # Type checker
+    "pytest>=8.4.2",    # Test framework
+    "pytest-cov>=7.0.0", # Coverage plugin
+]
+```
+
+Then install:
+```bash
+uv sync  # With uv (recommended)
+# OR
+pip install -e ".[dev]"  # With pip
 ```
 
 #### Advanced Options

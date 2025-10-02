@@ -49,7 +49,32 @@ cp js/build.js your-project/scripts/build/
 cp js/build.js your-project/
 ```
 
-### 2. Install Required Dependencies (if not present)
+### 2. Add npm Scripts (Recommended)
+
+Add these scripts to your `package.json` for convenient access:
+
+```json
+{
+  "scripts": {
+    "build:full": "node build.js",
+    "build:full:verbose": "node build.js --verbose",
+    "build:with-e2e": "node build.js --run-playwright-tests",
+    "build:quick": "node build.js --skip-tests",
+    "build:ci": "node build.js --run-playwright-tests --threshold 80"
+  }
+}
+```
+
+Then use:
+```bash
+npm run build:full              # Full build pipeline
+npm run build:full:verbose      # With detailed output
+npm run build:with-e2e          # Include Playwright E2E tests
+npm run build:quick             # Skip tests for faster iteration
+npm run build:ci                # CI build with stricter coverage
+```
+
+### 3. Install Required Dependencies (if not present)
 
 The script uses npx to run tools, but for optimal performance, install them:
 
@@ -63,7 +88,7 @@ npm install --save-dev \
   complexity-report
 ```
 
-### 3. Run the Build
+### 4. Run the Build
 
 ```bash
 # From project root
@@ -85,6 +110,23 @@ The build script automatically detects:
 4. **ESLint**: eslint.config.js or .eslintrc files
 5. **Playwright**: Playwright projects in workspace
 6. **Source Directories**: Common patterns (src, app, packages, etc.)
+
+### Usage
+
+#### Using npm Scripts (Recommended)
+
+```bash
+npm run build:full              # Full build with all stages
+npm run build:with-e2e          # Include Playwright E2E tests
+npm run build:quick             # Skip tests for faster iteration
+npm run build:ci                # CI build with stricter coverage (80%)
+```
+
+#### Direct Command Line
+
+```bash
+node build.js [options]
+```
 
 ### Command Line Options
 

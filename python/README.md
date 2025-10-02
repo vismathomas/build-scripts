@@ -35,10 +35,36 @@ python/
 
 ## Quick Start
 
-### 1. Copy Build Script to Your Project
+### Option 1: Run Directly from GitHub (Easiest)
+
+No installation needed! Use `uvx` to run the build script directly:
 
 ```bash
-# Copy the build script
+# Run build script directly from GitHub
+uvx --from git+https://github.com/vismathomas/build-scripts python python/build.py
+
+# With options
+uvx --from git+https://github.com/vismathomas/build-scripts python python/build.py --verbose
+uvx --from git+https://github.com/vismathomas/build-scripts python python/build.py --fix
+```
+
+**Or download just the script:**
+
+```bash
+# Download to your project
+curl -o build.py https://raw.githubusercontent.com/vismathomas/build-scripts/main/python/build.py
+
+# Run with uv
+uv run python build.py
+
+# Or run directly
+python build.py --verbose
+```
+
+### Option 2: Copy Build Script to Your Project
+
+```bash
+# Copy from cloned repo
 cp python/build.py your-project/scripts/build/
 
 # Or place in project root
@@ -46,6 +72,12 @@ cp python/build.py your-project/
 ```
 
 ### 2. Install Required Tools
+
+The build script requires the following tools:
+- **uv** - Fast Python package manager
+- **ruff** - Python linter and formatter
+- **mypy** - Static type checker
+- **pytest** - Testing framework with coverage support
 
 #### Using uv (Recommended - Fast)
 
@@ -55,6 +87,16 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # Or with pip
 pip install uv
+
+# Add build tools to your pyproject.toml
+[dependency-groups]
+dev = [
+    "uv>=0.1.0",
+    "ruff>=0.13.1",
+    "mypy>=1.18.2",
+    "pytest>=8.4.2",
+    "pytest-cov>=7.0.0",
+]
 
 # Sync dependencies (reads pyproject.toml)
 uv sync
@@ -85,6 +127,112 @@ python build.py --fix
 
 # Clean artifacts
 python build.py --clean
+```
+
+## Usage with uv
+
+### Using uv run (Recommended)
+
+`uv` automatically manages the virtual environment and dependencies:
+
+```bash
+# Full build (uv handles the environment)
+uv run python build.py
+
+# With verbose output
+uv run python build.py --verbose
+
+# Auto-fix issues
+uv run python build.py --fix
+
+# Clean artifacts
+uv run python build.py --clean
+```
+
+**Benefits:**
+- ✅ No need to activate virtual environment
+- ✅ Automatically syncs dependencies before running
+- ✅ Ensures consistent environment across runs
+- ✅ Fast dependency resolution
+
+### Using uvx for One-Off Execution
+
+`uvx` runs Python scripts in isolated environments without installing:
+
+```bash
+# Run build script without installing dependencies globally
+uvx --from . python build.py
+
+# With options
+uvx --from . python build.py --verbose
+uvx --from . python build.py --fix
+```
+
+**Use cases:**
+- CI/CD pipelines where you don't want persistent installations
+- Testing the build script in isolation
+- Running on systems where you can't install packages globally
+
+### Traditional Virtual Environment
+
+If you prefer manual environment management:
+
+```bash
+# Create and activate virtual environment
+uv venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+
+# Install dependencies
+uv sync
+
+# Run build
+python build.py --verbose
+```
+
+### Comparison: uv vs pip vs uvx
+
+| Method | Command | Setup Time | Use Case |
+|--------|---------|------------|----------|
+| **uvx from GitHub** | `uvx --from git+https://...` | Very fast | No local install needed |
+| **uv run** | `uv run python build.py` | Fast (auto-sync) | Daily development, automatic env management |
+| **uvx local** | `uvx --from . python build.py` | Very fast (isolated) | CI/CD, one-off runs, testing |
+| **uv + venv** | `source .venv/bin/activate && python build.py` | Fast (one-time setup) | Traditional workflow, IDE integration |
+| **pip + venv** | `source .venv/bin/activate && python build.py` | Slow (dependency resolution) | Systems without uv |
+
+**Recommendation**: Use `uvx` from GitHub for first-time testing, `uv run` for development, and `uvx` for CI/CD pipelines.
+
+### Creating a Convenient Alias
+
+For easier access, create a shell alias or script wrapper:
+
+**Bash/Zsh (~/.bashrc or ~/.zshrc):**
+```bash
+alias pybuild='uvx --from git+https://github.com/vismathomas/build-scripts python python/build.py'
+
+# Then use:
+pybuild --verbose
+pybuild --fix
+```
+
+**PowerShell ($PROFILE):**
+```powershell
+function pybuild {
+    uvx --from git+https://github.com/vismathomas/build-scripts python python/build.py @args
+}
+
+# Then use:
+pybuild --verbose
+pybuild --fix
+```
+
+**Or create a local wrapper script (build.sh):**
+```bash
+#!/bin/bash
+uvx --from git+https://github.com/vismathomas/build-scripts python python/build.py "$@"
+```
+```bash
+chmod +x build.sh
+./build.sh --verbose
 ```
 
 ## Configuration
@@ -582,6 +730,8 @@ dist/
 
 ### GitHub Actions
 
+**Option 1: Run directly from GitHub repo (easiest, no file copying):**
+
 ```yaml
 name: Python Build
 
@@ -597,16 +747,56 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
-    - name: Set up Python
-      uses: actions/setup-python@v5
+    - name: Install uv
+      uses: astral-sh/setup-uv@v4
+    
+    - name: Run Build from GitHub Repository
+      run: |
+        uvx --from git+https://github.com/vismathomas/build-scripts \
+          python python/build.py --verbose
+    
+    - name: Upload Coverage
+      uses: codecov/codecov-action@v4
+      if: always()
       with:
-        python-version: ${{ matrix.python-version }}
+        files: ./coverage.xml
+        fail_ci_if_error: true
+    
+    - name: Upload HTML Coverage
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: coverage-report-${{ matrix.python-version }}
+        path: htmlcov/
+```
+
+**Option 2: With local build.py script in your repo:**
+
+```yaml
+name: Python Build
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.10', '3.11', '3.12']
+    
+    steps:
+    - uses: actions/checkout@v4
     
     - name: Install uv
-      run: curl -LsSf https://astral.sh/uv/install.sh | sh
+      uses: astral-sh/setup-uv@v4
+      with:
+        enable-cache: true
     
-    - name: Run Build Pipeline
-      run: python scripts/build/build.py --verbose --fix
+    - name: Set up Python
+      run: uv python install ${{ matrix.python-version }}
+    
+    - name: Run Build Pipeline with uv
+      run: uv run python scripts/build/build.py --verbose
     
     - name: Upload Coverage
       uses: codecov/codecov-action@v4
@@ -620,6 +810,18 @@ jobs:
       with:
         name: coverage-report-${{ matrix.python-version }}
         path: htmlcov/
+```
+
+**Alternative with uvx (no environment setup):**
+
+```yaml
+    - uses: actions/checkout@v4
+    
+    - name: Install uv
+      uses: astral-sh/setup-uv@v4
+    
+    - name: Run Build with uvx
+      run: uvx --from . python build.py --verbose
 ```
 
 ### Azure DevOps
@@ -646,8 +848,8 @@ steps:
 - script: |
     curl -LsSf https://astral.sh/uv/install.sh | sh
     export PATH="$HOME/.cargo/bin:$PATH"
-    python scripts/build/build.py --verbose --fix
-  displayName: 'Run Build Pipeline'
+    uv run python scripts/build/build.py --verbose
+  displayName: 'Run Build Pipeline with uv'
 
 - task: PublishCodeCoverageResults@2
   inputs:
@@ -671,7 +873,7 @@ build:
     - curl -LsSf https://astral.sh/uv/install.sh | sh
     - export PATH="$HOME/.cargo/bin:$PATH"
   script:
-    - python build.py --verbose --fix
+    - uv run python build.py --verbose
   artifacts:
     paths:
       - htmlcov/
@@ -693,15 +895,52 @@ build:
 
 **Solution**:
 ```bash
-# Install uv
+# Install uv (recommended)
 curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# On Windows (PowerShell)
+powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
 
 # Or with pip
 pip install uv
 
-# Or use pip-based build
+# Verify installation
+uv --version
+
+# Alternative: Use pip-based build without uv
 pip install -e ".[dev]"
 python build.py
+```
+
+#### Issue: "uv run fails with dependency errors"
+
+**Cause**: Dependencies not synced or pyproject.toml issues
+
+**Solution**:
+```bash
+# Force dependency sync
+uv sync --force
+
+# Clear cache and retry
+rm -rf .venv
+uv venv
+uv sync
+
+# Check pyproject.toml syntax
+uv tree  # Shows dependency tree
+```
+
+#### Issue: "uvx command not found"
+
+**Cause**: Using older version of uv without uvx
+
+**Solution**:
+```bash
+# Update uv to latest version
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Or use uv run instead
+uv run python build.py
 ```
 
 #### Issue: "Coverage below threshold"

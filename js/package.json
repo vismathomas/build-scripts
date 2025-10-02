@@ -7,7 +7,12 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "build:full": "node build.js",
+    "build:full:verbose": "node build.js --verbose",
+    "build:with-e2e": "node build.js --run-playwright-tests",
+    "build:quick": "node build.js --skip-tests",
+    "build:ci": "node build.js --run-playwright-tests --threshold 80"
   },
   "dependencies": {
     "@emotion/react": "^11.11.1",

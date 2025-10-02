@@ -1094,5 +1094,5 @@ else:
 
 ## Included source
 
-![build.py](build.py)
+![Source](build.py)
 ![pyproject.toml](pyproject.toml)

@@ -203,20 +203,20 @@ uvx --from git+https://github.com/vismathomas/build-scripts python python/build.
 curl -o build.py https://raw.githubusercontent.com/vismathomas/build-scripts/main/python/build.py
 
 # Run with uv (automatic environment management)
-uv run python build.py
+uv run build.py
 
 # With verbose output
-uv run python build.py --verbose
+uv run build.py --verbose
 
 # Auto-fix issues
-uv run python build.py --fix
+uv run build.py --fix
 ```
 
 #### Traditional Python
 
 ```bash
 cd your-project
-python scripts/build/build.py
+uv run scripts/build/build.py
 ```
 
 #### Dependencies
@@ -245,13 +245,13 @@ pip install -e ".[dev]"  # With pip
 
 ```bash
 # Verbose output
-python build.py --verbose
+uv run build.py --verbose
 
 # Auto-fix formatting and linting
-python build.py --fix
+uv run build.py --fix
 
 # Clean artifacts
-python build.py --clean
+uv run build.py --clean
 ```
 
 #### Configuration
@@ -552,7 +552,7 @@ build-full.bat --verbose
 node build.js --verbose
 
 # Python
-python build.py --verbose
+uv run build.py --verbose
 ```
 
 ## Best Practices

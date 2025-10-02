@@ -111,7 +111,7 @@ build-scripts/
   - Professional help output
 
 #### Python Scripts
-- ✅ **build.py** - Removed "Solace" references
+- ✅ **build.py** - Made project-agnostic
   - Now generic "Python Project" branding
   - Fully configurable via `pyproject.toml`
   - Works with any Python project structure
@@ -302,7 +302,7 @@ node build.js --verbose
 cp -r c:/dev/gat/build-scripts/python/* c:/your-project/
 
 # Run full build
-python build.py --verbose
+uv run build.py --verbose
 ```
 
 ---

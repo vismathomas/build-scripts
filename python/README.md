@@ -55,9 +55,9 @@ uvx --from git+https://github.com/vismathomas/build-scripts python python/build.
 curl -o build.py https://raw.githubusercontent.com/vismathomas/build-scripts/main/python/build.py
 
 # Run with uv
-uv run python build.py
+uv run build.py
 
-# Or run directly
+# Or run directly (if uv not available)
 python build.py --verbose
 ```
 
@@ -117,16 +117,16 @@ Ensure your `pyproject.toml` has the required sections (see Configuration below)
 
 ```bash
 # Full build
-python build.py
+uv run build.py
 
 # With verbose output
-python build.py --verbose
+uv run build.py --verbose
 
 # Auto-fix issues
-python build.py --fix
+uv run build.py --fix
 
 # Clean artifacts
-python build.py --clean
+uv run build.py --clean
 ```
 
 ## Usage with uv
@@ -137,16 +137,16 @@ python build.py --clean
 
 ```bash
 # Full build (uv handles the environment)
-uv run python build.py
+uv run build.py
 
 # With verbose output
-uv run python build.py --verbose
+uv run build.py --verbose
 
 # Auto-fix issues
-uv run python build.py --fix
+uv run build.py --fix
 
 # Clean artifacts
-uv run python build.py --clean
+uv run build.py --clean
 ```
 
 **Benefits:**
@@ -186,7 +186,7 @@ source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 uv sync
 
 # Run build
-python build.py --verbose
+uv run build.py --verbose
 ```
 
 ### Comparison: uv vs pip vs uvx
@@ -194,9 +194,9 @@ python build.py --verbose
 | Method | Command | Setup Time | Use Case |
 |--------|---------|------------|----------|
 | **uvx from GitHub** | `uvx --from git+https://...` | Very fast | No local install needed |
-| **uv run** | `uv run python build.py` | Fast (auto-sync) | Daily development, automatic env management |
+| **uv run** | `uv run build.py` | Fast (auto-sync) | Daily development, automatic env management |
 | **uvx local** | `uvx --from . python build.py` | Very fast (isolated) | CI/CD, one-off runs, testing |
-| **uv + venv** | `source .venv/bin/activate && python build.py` | Fast (one-time setup) | Traditional workflow, IDE integration |
+| **uv + venv** | `source .venv/bin/activate && uv run build.py` | Fast (one-time setup) | Traditional workflow, IDE integration |
 | **pip + venv** | `source .venv/bin/activate && python build.py` | Slow (dependency resolution) | Systems without uv |
 
 **Recommendation**: Use `uvx` from GitHub for first-time testing, `uv run` for development, and `uvx` for CI/CD pipelines.
@@ -353,7 +353,7 @@ exclude_lines = [
 ## Command Line Options
 
 ```bash
-python build.py [options]
+uv run build.py [options]
 ```
 
 ### Options
@@ -366,19 +366,19 @@ python build.py [options]
 
 ```bash
 # Full build with verbose output
-python build.py --verbose
+uv run build.py --verbose
 
 # Quick check (no auto-fix)
-python build.py
+uv run build.py
 
 # Auto-fix issues
-python build.py --fix
+uv run build.py --fix
 
 # Clean up artifacts
-python build.py --clean
+uv run build.py --clean
 
 # CI/CD build (verbose + auto-fix)
-python build.py --verbose --fix
+uv run build.py --verbose --fix
 ```
 
 ## Build Pipeline Stages
@@ -796,7 +796,7 @@ jobs:
       run: uv python install ${{ matrix.python-version }}
     
     - name: Run Build Pipeline with uv
-      run: uv run python scripts/build/build.py --verbose
+      run: uv run scripts/build/build.py --verbose
     
     - name: Upload Coverage
       uses: codecov/codecov-action@v4
@@ -848,7 +848,7 @@ steps:
 - script: |
     curl -LsSf https://astral.sh/uv/install.sh | sh
     export PATH="$HOME/.cargo/bin:$PATH"
-    uv run python scripts/build/build.py --verbose
+    uv run scripts/build/build.py --verbose
   displayName: 'Run Build Pipeline with uv'
 
 - task: PublishCodeCoverageResults@2
@@ -873,7 +873,7 @@ build:
     - curl -LsSf https://astral.sh/uv/install.sh | sh
     - export PATH="$HOME/.cargo/bin:$PATH"
   script:
-    - uv run python build.py --verbose
+    - uv run build.py --verbose
   artifacts:
     paths:
       - htmlcov/
@@ -909,7 +909,7 @@ uv --version
 
 # Alternative: Use pip-based build without uv
 pip install -e ".[dev]"
-python build.py
+python build.py  # Note: without uv run when using pip
 ```
 
 #### Issue: "uv run fails with dependency errors"
@@ -940,7 +940,7 @@ uv tree  # Shows dependency tree
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # Or use uv run instead
-uv run python build.py
+uv run build.py
 ```
 
 #### Issue: "Coverage below threshold"
@@ -957,7 +957,7 @@ uv run python build.py
 # addopts = ["--cov-fail-under=60"]  # Lower threshold
 
 # Option 3: See which files need coverage
-python build.py --verbose
+uv run build.py --verbose
 open htmlcov/index.html  # View detailed report
 ```
 
@@ -994,7 +994,7 @@ addopts = [
 
 **Enable Verbose Mode**:
 ```bash
-python build.py --verbose
+uv run build.py --verbose
 ```
 
 **Run Stages Individually**:

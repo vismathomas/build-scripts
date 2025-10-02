@@ -3,13 +3,13 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "solace"
+name = "your-project-name"
 version = "1.0.0"
-description = "Solace: unified MCP server and HTML to Markdown conversion toolkit"
+description = "Your project description"
 readme = "README.md"
 license = {text = "MIT"}
 authors = [
-    {name = "Solace Team", email = "dev@example.com"}
+    {name = "Your Name", email = "dev@example.com"}
 ]
 keywords = ["mcp", "rag", "search", "markdown", "semantic", "vector", "server", "html", "converter"]
 classifiers = [
@@ -74,16 +74,17 @@ docker = [
 ]
 
 [project.scripts]
-solace = "solace.cli:main"
+# Add your CLI entrypoints here
+# example = "your_package.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/your-username/solace"
-Repository = "https://github.com/your-username/solace"
-Issues = "https://github.com/your-username/solace/issues"
-Documentation = "https://github.com/your-username/solace#readme"
+Homepage = "https://github.com/your-username/your-project"
+Repository = "https://github.com/your-username/your-project"
+Issues = "https://github.com/your-username/your-project/issues"
+Documentation = "https://github.com/your-username/your-project#readme"
 
 [tool.hatch.build.targets.wheel]
-packages = ["solace"]
+packages = ["your_package"]
 
 [tool.black]
 line-length = 88
@@ -183,10 +184,10 @@ module = [
 ]
 ignore_missing_imports = true
 
-# Additional override for converter module with complex BeautifulSoup typing
-[[tool.mypy.overrides]]
-module = "solace.html2markdown.converter"
-ignore_errors = true
+# Additional override for modules with complex typing
+# [[tool.mypy.overrides]]
+# module = "your_package.some_module"
+# ignore_errors = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -223,9 +224,7 @@ omit = [
     "run_integration_tests.py",
     "simple_test.py",
     "build.py",
-    "example_confluence_usage.py",
     "main.py",
-    "confluence_to_markdown/*",
 ]
 
 [tool.coverage.report]

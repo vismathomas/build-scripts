@@ -10,7 +10,7 @@
 
 artifacts/
 reports/
-build/
+/build/
 dist/
 out/
 
